@@ -1,17 +1,34 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js App" />
+    <h1>Trello Recovery</h1>
+    <RecoveryForm @submitted="onSubmit" />
+    <Content v-if="url" :url="url" :apiKey="apiKey" :token="token" />
   </div>
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
+import RecoveryForm from "./components/RecoveryForm.vue";
+import Content from "./components/Content";
 
 export default {
   name: "App",
   components: {
-    HelloWorld
+    RecoveryForm,
+    Content
+  },
+  data() {
+    return {
+      url: "",
+      apiKey: process.env.VUE_APP_KEY,
+      token: process.env.VUE_APP_TOKEN
+    };
+  },
+  methods: {
+    onSubmit(data) {
+      this.url = data.url;
+      this.apiKey = data.key;
+      this.token = data.token;
+    }
   }
 };
 </script>
