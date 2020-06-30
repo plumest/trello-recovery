@@ -13,11 +13,11 @@
         />
       </b-form-group>
 
-      <b-form-group label="Card Id">
+      <b-form-group label="Card link (Click on the card then copy url)">
         <b-form-input
           class="textForm"
-          v-model="cardId"
-          placeholder="Enter the card id"
+          v-model="link"
+          placeholder="Enter the card's url"
           required
         />
       </b-form-group>
@@ -46,6 +46,7 @@
 export default {
   data() {
     return {
+      link: "",
       cardId: "",
       apiKey: "",
       apiToken: "",
@@ -59,7 +60,10 @@ export default {
   },
   methods: {
     onSubmit(e) {
+      // https://trello.com/c/CSV6GpER/27-%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%88%E0%B8%B1%E0%B8%94%E0%B8%87%E0%B8%B2%E0%B8%99-call-for-speaker
       e.preventDefault();
+      // this.cardId = this.link.replace("https://trello.com/c/", "");
+      this.cardId = this.link.slice(21, 29);
       let data = {
         url: `https://trello.com/1/cards/${this.cardId}/actions?filter=updateCard:desc`,
         key: this.apiKey,
