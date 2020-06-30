@@ -1,5 +1,8 @@
 <template>
-  <div v-html="compiledMarkdown"></div>
+  <div>
+    <div v-html="compiledMarkdown"></div>
+    <b-button @click="copy">Copy</b-button>
+  </div>
 </template>
 
 <script>
@@ -24,9 +27,20 @@ export default {
       .then(res => (this.content = res.data[0].data.old.desc))
       .catch(e => console.log(e));
   },
+  methods: {
+    copy() {
+      this.$clipboard(this.content);
+    }
+  },
   computed: {
     compiledMarkdown: function() {
-      return marked(this.content, { sanitize: true });
+      return marked(this.content, {
+        mangle: true,
+        smartLists: true,
+        smartypants: true,
+        gfm: true,
+        breaks: true
+      });
     }
   }
 };
@@ -34,6 +48,10 @@ export default {
 
 <style scoped>
 div {
-  margin-top: 2rem;
+  margin: 1rem 2rem;
+  padding: 2rem;
+  text-align: left;
+  line-height: 30px;
+  border: 2px solid #efefef;
 }
 </style>
