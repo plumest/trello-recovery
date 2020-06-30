@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-html="compiledMarkdown"></div>
-    <b-button @click="copy">Copy</b-button>
+    <b-button @click="copy" variant="primary">Copy</b-button>
   </div>
 </template>
 
