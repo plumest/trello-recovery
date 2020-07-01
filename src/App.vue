@@ -1,8 +1,19 @@
 <template>
   <div id="app">
     <h1>Trello Recovery</h1>
-    <RecoveryForm @submitted="onSubmit" />
-    <Content v-if="url" :url="url" :apiKey="apiKey" :token="token" />
+    <RecoveryForm
+      @submitted="onSubmit"
+      :secretKey="secretKey"
+      :secretToken="secretToken"
+      :db="db"
+      :canEdit="!secretKey && !secretToken"
+    />
+    <Content
+      v-if="url"
+      :url="url"
+      :secretKey="secretKey"
+      :secretToken="secretToken"
+    />
   </div>
 </template>
 
@@ -18,16 +29,69 @@ export default {
   },
   data() {
     return {
+      db: null,
       url: "",
-      apiKey: process.env.VUE_APP_KEY,
-      token: process.env.VUE_APP_TOKEN
+      secretKey: "",
+      secretToken: ""
     };
+  },
+  async created() {
+    this.db = await this.getDb();
+    let { secretKey, secretToken } = await this.getSecretFromDb();
+    this.secretKey = secretKey;
+    this.secretToken = secretToken;
   },
   methods: {
     onSubmit(data) {
       this.url = data.url;
-      this.apiKey = data.key;
-      this.token = data.token;
+      this.secretKey = data.secretKey;
+      this.secretToken = data.secretToken;
+    },
+
+    async getDb() {
+      return new Promise((resolve, reject) => {
+        let request = window.indexedDB.open(process.env.VUE_APP_DB_NAME);
+
+        request.onerror = e => {
+          console.log("Error opening db", e);
+          reject("Error");
+        };
+
+        request.onsuccess = e => {
+          console.log(e.target.result);
+          resolve(e.target.result);
+        };
+
+        request.onupgradeneeded = e => {
+          console.log("onupgradeneeded");
+          let db = e.target.result;
+          db.createObjectStore("secret", {
+            autoIncrement: true,
+            keyPath: "id"
+          });
+        };
+      });
+    },
+
+    async getSecretFromDb() {
+      return new Promise(resolve => {
+        let trans = this.db.transaction(["secret"], "readonly");
+        trans.oncomplete = () => {
+          console.log(secret);
+          resolve(secret);
+        };
+
+        let store = trans.objectStore("secret");
+        let secret = {};
+
+        store.openCursor().onsuccess = e => {
+          let cursor = e.target.result;
+          if (cursor) {
+            secret = cursor.value;
+            cursor.continue();
+          }
+        };
+      });
     }
   }
 };

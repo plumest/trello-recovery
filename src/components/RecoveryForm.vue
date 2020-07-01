@@ -1,7 +1,8 @@
 <template>
   <div>
     <b-form @submit="onSubmit">
-      <b-form-group label="Recovery type">
+      <!--  NOTE: Disable for now  -->
+      <b-form-group label="Recovery type" v-if="!options">
         <b-form-radio-group
           id="btn-radios"
           v-model="isLastChange"
@@ -21,21 +22,24 @@
           required
         />
       </b-form-group>
-      <b-form-group label="Key & Token">
+      <b-form-group v-if="canEdit" label="Key & Token">
         <a href="https://trello.com/app-key" target="_blank"
           >You can get them here</a
         >
         <b-form-input
           class="textForm"
-          v-model="apiKey"
+          v-model="secretKey"
           placeholder="Enter the API key"
+          required
         />
         <b-form-input
           class="textForm"
-          v-model="apiToken"
+          v-model="secretToken"
           placeholder="Enter the API token"
+          required
         />
       </b-form-group>
+      <b-button v-else @click="displaySecretForm">Edit Key & Token</b-button>
 
       <b-button type="submit" variant="primary">Recovery</b-button>
     </b-form>
@@ -44,32 +48,56 @@
 
 <script>
 export default {
+  props: {
+    db: Object,
+    secretKey: String,
+    secretToken: String,
+    canEdit: Boolean
+  },
   data() {
     return {
       link: "",
       cardId: "",
-      apiKey: "",
-      apiToken: "",
+      // apiKey: "",
+      // apiToken: "",
       recoveryUrl: "",
       isLastChange: true,
       options: [
         { text: "Last Change", value: true },
         { text: "All Change", value: false }
-      ]
+      ],
+      isShow: false
     };
   },
   methods: {
-    onSubmit(e) {
+    displaySecretForm() {
+      this.canEdit = true;
+    },
+    async onSubmit(e) {
       // https://trello.com/c/CSV6GpER/27-%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%88%E0%B8%B1%E0%B8%94%E0%B8%87%E0%B8%B2%E0%B8%99-call-for-speaker
       e.preventDefault();
       // this.cardId = this.link.replace("https://trello.com/c/", "");
       this.cardId = this.link.slice(21, 29);
       let data = {
         url: `https://trello.com/1/cards/${this.cardId}/actions?filter=updateCard:desc`,
-        key: this.apiKey,
-        token: this.apiToken
+        secretKey: this.secretKey,
+        secretToken: this.secretToken
       };
+      let { secretKey, secretToken } = data;
+      this.addSecretToDb({ secretKey, secretToken });
       this.$emit("submitted", data);
+    },
+
+    async addSecretToDb(secret) {
+      return new Promise(resolve => {
+        let trans = this.db.transaction(["secret"], "readwrite");
+        trans.oncomplete = () => {
+          resolve();
+        };
+
+        let store = trans.objectStore("secret");
+        store.add(secret);
+      });
     }
   }
 };
